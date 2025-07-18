@@ -7,4 +7,3 @@ export const ActiveUser = createParamDecorator((field: keyof TokenPayload | unde
   const user: TokenPayload | undefined = request[REQUEST_USER_KEY]
   return field ? user?.[field] : user
 })
-
