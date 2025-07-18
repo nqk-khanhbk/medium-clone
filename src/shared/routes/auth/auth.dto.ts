@@ -87,6 +87,13 @@ export class GetProfileResDTO {
   @IsBoolean()
   following: boolean
 
+  @IsString()
+  bio: string | null
+  @IsString()
+  image: string | null
+  @IsBoolean()
+  following: boolean
+
   constructor(partial: Partial<GetProfileResDTO>) {
     Object.assign(this, partial)
   }
