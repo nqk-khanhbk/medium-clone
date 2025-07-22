@@ -44,4 +44,3 @@ if (errorArray.length > 0) {
 const envConfig = configServer
 
 export default envConfig
-

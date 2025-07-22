@@ -20,4 +20,3 @@ export class AccessTokenGuard implements CanActivate {
     }
   }
 }
-
