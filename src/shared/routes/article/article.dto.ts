@@ -1,4 +1,4 @@
-import { IsArray, IsString, ArrayNotEmpty, ArrayUnique } from "class-validator";
+import { IsArray, IsString, ArrayNotEmpty, ArrayUnique, IsOptional, IsNotEmpty } from "class-validator";
 import { ArticleModel } from "../../models/article.model";
 import { Type } from "class-transformer";
 import { UserModel } from "../../models/user.model";
@@ -30,4 +30,26 @@ export class CreateArticleBodyDTO {
   tagList: string[];
 }
 
-export class UpdateArticleDTO extends CreateArticleBodyDTO{}
+export class UpdateArticleDTO{
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  title?: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  body?: string;
+}
+
+export class DeleteArticleResDTO{
+  status:boolean
+  message: string
+  constructor(partial: Partial<DeleteArticleResDTO>) {
+    Object.assign(this, partial)
+  }
+}

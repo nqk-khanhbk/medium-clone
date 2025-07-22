@@ -2,12 +2,13 @@ import { BadRequestException, ConflictException, ForbiddenException, Injectable,
 import { PrismaService } from '../../services/prisma.service';
 import { CreateArticleBodyDTO, UpdateArticleDTO } from './article.dto';
 import slugify from 'slugify'
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class ArticleService {
   constructor(private readonly prismaService: PrismaService) { }
 
-  async createActicle(body: CreateArticleBodyDTO, userId: number) {
+  async createArticle(body: CreateArticleBodyDTO, userId: number) {
     const { title, description, body: content, tagList } = body
 
     const slug = slugify(title, { lower: true, strict: true })
@@ -81,79 +82,74 @@ export class ArticleService {
     return article;
   }
 
-  async updateActicle(body: UpdateArticleDTO, userId: number, slug: string) {
-    const { title, description, body: content, tagList } = body
+  async updateArticle(bodyupdate: UpdateArticleDTO, userId: number, slug: string) {
+    const { title, description, body } = bodyupdate;
 
-    const existingArticle = await this.prismaService.article.findUnique({
+    if (!title && !description && !body) {
+      throw new BadRequestException('Phải có ít nhất một trường được cập nhật');
+    }
+
+    const article = await this.prismaService.article.findUnique({
       where: { slug },
-      include: { tags: true },
-    })
-
-    if (!existingArticle) {
-      throw new NotFoundException('Article not found')
-    }
-
-    if (existingArticle.author_id !== userId) {
-      throw new ForbiddenException('You are not the author of this article')
-    }
-
-    const newSlug = slugify(title, { lower: true, strict: true })
-
-    if (newSlug !== slug) {
-      const slugExists = await this.prismaService.article.findUnique({
-        where: { slug: newSlug },
-      })
-
-      if (slugExists) {
-        throw new BadRequestException('Slug already exists for another article')
-      }
-    }
-
-    // Xử lý tags
-    const tags = await Promise.all(
-      tagList.map(async (tagName) => {
-        return this.prismaService.tag.upsert({
-          where: { name: tagName },
-          update: {},
-          create: { name: tagName },
-        })
-      })
-    )
-
-    // Xóa các tag cũ liên kết với article
-    await this.prismaService.articleTag.deleteMany({
-      where: { article_id: existingArticle.id },
-    })
-
-    // Cập nhật bài viết
-    const updatedArticle = await this.prismaService.article.update({
-      where: { id: existingArticle.id },
-      data: {
-        title,
-        description,
-        body: content,
-        slug: newSlug,
+      include: {
         tags: {
-          create: tags.map((tag) => ({
-            tag: { connect: { id: tag.id } },
-          })),
+          include: {
+            tag: true,
+          },
         },
       },
+    });
+
+    if (!article) {
+      throw new BadRequestException('Bài viết không tồn tại');
+    }
+
+    if (article.author_id !== userId) {
+      throw new ForbiddenException('Bạn không có quyền sửa bài viết này');
+    }
+
+    const updateData: any = {};
+
+    if (title) {
+      const newSlug = slugify(title, { lower: true, strict: true });
+      const existed = await this.prismaService.article.findUnique({
+        where: { slug: newSlug },
+      });
+
+      if (existed && existed.id !== article.id) {
+        throw new BadRequestException('Tiêu đề bài viết đã tồn tại');
+      }
+
+      updateData.title = title;
+      updateData.slug = newSlug;
+    }
+
+    if (description) updateData.description = description;
+    if (body) updateData.body = body;
+
+    const updatedArticle = await this.prismaService.article.update({
+      where: { id: article.id },
+      data: updateData,
       include: {
         author: true,
-        favorites: true,
+        tags: {
+          include: {
+            tag: true,
+          },
+        },
       },
-    })
-
+    });
+    const tagList = article.tags.map(t => t.tag.name);
+    // Trả về kết quả
     return {
       ...updatedArticle,
-      tagList: tags.map((tag) => tag.name),
-      favorited: false,
-      favoritesCount: updatedArticle.favorites.length,
-    }
+      tagList,
+      tags: undefined,
+    };
   }
 
-  async deleteActicle(userId: number, slug: string) {
+
+  async deleteArticle(userId: number, slug: string) {
     const article = await this.prismaService.article.findUnique({
       where: { slug },
     });
@@ -170,8 +166,9 @@ export class ArticleService {
       where: { slug },
     });
 
-    return { message: 'Article deleted successfully' };
+    return { status: true, message: 'Article deleted successfully' };
   }
+
 
   async favorite(userId: number, slug: string) {
     const article = await this.prismaService.article.findUnique({
@@ -227,10 +224,8 @@ export class ArticleService {
     });
 
     return {
-      article: {
-        ...updatedArticle,
-        favorited: true,
-      },
+      ...updatedArticle,
+      favorited: true,
     };
   }
 
@@ -284,14 +279,9 @@ export class ArticleService {
     });
 
     return {
-      article: {
-        ...updatedArticle,
-        favorited: false,
-      },
+      ...updatedArticle,
+      favorited: false,
     };
   }
-
-
-
 }
 
