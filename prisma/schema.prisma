@@ -53,9 +53,11 @@ model Article {
   author_id Int
   author    User @relation("UserArticles", fields: [author_id], references: [id])
 
-  comments  Comment[]
-  tags      ArticleTag[]
-  favorites Favorite[]
+  comments       Comment[]
+  tags           ArticleTag[]
+  favorites      Favorite[]
+  favoritesCount Int          @default(0)
+
 }
 
 model Comment {

@@ -7,6 +7,7 @@ import { NotFoundException } from '@nestjs/common'
 
 @Injectable()
 export class UsersService {
+
   constructor(
     private readonly hashingService: HashingService,
     private readonly prismaService: PrismaService,

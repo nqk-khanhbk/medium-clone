@@ -47,6 +47,7 @@ export class LogoutResDTO {
 }
 
 export class UpdateUserDTO {
+
   @IsOptional()
   @IsString()
   email?: string
@@ -72,6 +73,7 @@ export class UpdateUserDTO {
   @IsString()
   @Match('newPassword', { message: 'Mật khẩu và xác nhận mật khẩu không khớp nhau' })
   confirmNewPassword?: string
+
 }
 
 export class GetProfileResDTO {
