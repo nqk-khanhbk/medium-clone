@@ -6,9 +6,10 @@ import { AuthModule } from './shared/routes/auth/auth.module'
 import { APP_INTERCEPTOR } from '@nestjs/core'
 import { UsersModule } from './shared/routes/users/users.module'
 import { ArticleModule } from './shared/routes/article/article.module'
+import { CommentsModule } from './shared/routes/comments/comments.module'
 
 @Module({
-  imports: [SharedModule, AuthModule, UsersModule,ArticleModule],
+  imports: [SharedModule, AuthModule, UsersModule,ArticleModule, CommentsModule],
   controllers: [AppController],
   providers: [
     AppService,
