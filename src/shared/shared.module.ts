@@ -4,6 +4,7 @@ import { HashingService } from './services/hashing.service'
 import { TokenService } from './services/token.services'
 import { JwtModule } from '@nestjs/jwt'
 
+
 const sharedServices = [PrismaService, HashingService, TokenService]
 @Global()
 @Module({
